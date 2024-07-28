@@ -53,7 +53,7 @@ ADDR_KBRD:
 ##############################################################################
 # Mutable Data
 ##############################################################################
-blockLocation:
+blockLocationOffset:
 	.space	4
 blockPrimaryColor:
 	.space	4
@@ -74,35 +74,57 @@ blockSecondaryColor:
 drawblock:
 	lw $s1, blockPrimaryColor
 	lw $s2, blockSecondaryColor
+	lw $s3, blockLocationOffset
+	add $s4, $t0, $s3
+	addi $s5, $s4, 512
 	
 loop:	
-	bgt $t0, 0x10008200, DONE
-	sw $s1, 0($t0)
-	sw $s1, 4($t0)
-	sw $s1, 8($t0)
-	sw $s2, 12($t0)
-	addi $t0, $t0, 256
+	bgt $s4, $s5, DONE
+	sw $s1, 0($s4)
+	sw $s1, 4($s4)
+	sw $s1, 8($s4)
+	sw $s2, 12($s4)
+	addi $s4, $s4, 256
 	j loop
 	
-DONE:	sw $s2, 0($t0)
-	sw $s2, 4($t0)
-	sw $s2, 8($t0)
-	sw $s2, 12($t0)
+DONE:	sw $s2, 0($s4)
+	sw $s2, 4($s4)
+	sw $s2, 8($s4)
+	sw $s2, 12($s4)
 	jr $ra
 	
 	
 	
 drawO:
-drawI:
-	li $t9, 0
+	li $t1, 0xf9fe02
+	li $t2, 0xebea5c
+    	sw $t1, blockPrimaryColor
+    	sw $t2, blockSecondaryColor
+	li $t8, 0
 	
-lLoop:	bge $t9, 4, doneLLoop
+OLoop:	bge $t8, 32,doneFunctionLoop
 	jal drawblock
-	addi $t9, $t9, 1
-	j lLoop
+	addi $t8, $t8, 16
+	sw $t8, blockLocationOffset 
+	j OLoop
 
-doneLLoop:
+	
+
+drawI:
+	li $t1, 0x00e3fe
+	li $t2, 0x2fc5d7
+    	sw $t1, blockPrimaryColor
+    	sw $t2, blockSecondaryColor
+	li $t8, 0
+lLoop:	bge $t8, 4096, doneFunctionLoop
+	jal drawblock
+	addi $t8, $t8, 1024
+	sw $t8, blockLocationOffset 
+	j lLoop
+	
+doneFunctionLoop:
 	jr $ra
+	
 	
 drawS:
 drawZ:
@@ -111,18 +133,14 @@ drawJ:
 drawT:
 	
 main:
-    # Initialize the game
-    	li $t1, RED	# $t1 = red
-    	li $t2, 0xcc00000
+    	# Initialize the game
+
    	# 0x1000FFFC is the bottom right pixel
    
     	lw $t0, ADDR_DSPL       # $t0 = base address for display
     	
     	
-    	sw $t1, blockPrimaryColor
-    	sw $t2, blockSecondaryColor
-    	
-    	jal drawI
+    	jal drawO
 
 
 game_loop:
