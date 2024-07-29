@@ -45,10 +45,14 @@
 ##############################################################################
 # The address of the bitmap display. Don't forget to connect it!
 ADDR_DSPL:
-    .word 0x10008000
+    	.word 0x10008000
 # The address of the keyboard. Don't forget to connect it!
 ADDR_KBRD:
-    .word 0xffff0000
+	.word 0xffff0000
+GAME_WIDTH:
+	.word 320
+GAME_HEIGHT:
+	.word 640
 
 ##############################################################################
 # Mutable Data
@@ -396,6 +400,74 @@ doneBackgroundLoops:
 	jr $ra 
 
 
+checkKeyPress:
+	lw $t9, ADDR_KBRD
+	lw $t8, 0($t9)
+	beq $t8, 1, keypressOccurred
+	jr $ra
+	
+keypressOccurred:
+	lw $t2, 4($t9)
+	beq $t2, 0x77, wPress 
+	beq $t2, 0x61, aPress
+	beq $t2, 0x73, sPress
+	beq $t2, 0x64, dPress
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+    	jal refreshGameDisplay
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
+
+wPress:
+	lw $t3, blockYOffset
+	addi $t3, $t3, -1024
+	sw $t3, blockYOffset
+	j keypressOccurred
+aPress:
+	lw $t3, blockXOffset
+	addi $t3, $t3, -16
+	sw $t3, blockXOffset
+    	jal refreshGameDisplay
+	j keypressOccurred
+sPress:
+	lw $t3, blockYOffset
+	addi $t3, $t3, 1024
+	sw $t3, blockYOffset
+    	jal refreshGameDisplay
+	j keypressOccurred
+dPress:
+	lw $t3, blockXOffset
+	addi $t3, $t3, 16
+	sw $t3, blockXOffset
+    	jal refreshGameDisplay
+	j keypressOccurred
+
+
+
+
+refreshGameDisplay:
+	li $t1, 0x1000A430
+	addi $t2, $t1, 156	
+	li $t3, 0xffff00
+	
+rowLoop:
+	beq $t1, $t2, doneRow
+	lw $t3, 0($t1)
+	addi $t1, $t1, 4
+	j rowLoop
+
+doneRow:
+	addi $t1, $t1, 100
+	addi $t2, $t1, 156
+	
+	bge $t1, 0x1000F3CC, doneClear
+	j rowLoop
+
+doneClear:
+	jr $ra
+
+
 
 
 main:
@@ -404,9 +476,8 @@ main:
    	# 0x1000FFFC is the bottom right pixel
    
     	lw $t0, ADDR_DSPL       # $t0 = base address for display
-
+	li $t5, 0x000000
     	jal drawBackground
-    	jal drawT
 
 
 game_loop:
@@ -418,4 +489,8 @@ game_loop:
 	# 4. Sleep
 
     	#5. Go back to 1
+    	
+    	jal checkKeyPress
+    	jal drawS
+    	
 	b game_loop
