@@ -408,59 +408,62 @@ checkKeyPress:
 	
 keypressOccurred:
 	lw $t2, 4($t9)
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
 	beq $t2, 0x77, wPress 
 	beq $t2, 0x61, aPress
 	beq $t2, 0x73, sPress
 	beq $t2, 0x64, dPress
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
-    	jal refreshGameDisplay
-    	lw $ra, 0($sp)
-    	addi $sp, $sp, 4
-	jr $ra
+
 
 wPress:
 	lw $t3, blockYOffset
 	addi $t3, $t3, -1024
 	sw $t3, blockYOffset
-	j keypressOccurred
+    	jal refreshGameDisplay
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
 aPress:
 	lw $t3, blockXOffset
 	addi $t3, $t3, -16
 	sw $t3, blockXOffset
     	jal refreshGameDisplay
-	j keypressOccurred
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
 sPress:
 	lw $t3, blockYOffset
 	addi $t3, $t3, 1024
 	sw $t3, blockYOffset
     	jal refreshGameDisplay
-	j keypressOccurred
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
 dPress:
 	lw $t3, blockXOffset
 	addi $t3, $t3, 16
 	sw $t3, blockXOffset
     	jal refreshGameDisplay
-	j keypressOccurred
-
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
 
 
 
 refreshGameDisplay:
 	li $t1, 0x1000A430
 	addi $t2, $t1, 156	
-	li $t3, 0xffff00
-	
+	li $t3, 0
 rowLoop:
-	beq $t1, $t2, doneRow
-	lw $t3, 0($t1)
+	bgt $t1, $t2, doneRow
+	sw $t3, 0($t1)
 	addi $t1, $t1, 4
 	j rowLoop
 
 doneRow:
-	addi $t1, $t1, 100
+	addi $t1, $t1, 96
 	addi $t2, $t1, 156
-	
 	bge $t1, 0x1000F3CC, doneClear
 	j rowLoop
 
@@ -491,6 +494,6 @@ game_loop:
     	#5. Go back to 1
     	
     	jal checkKeyPress
-    	jal drawS
+    	jal drawI
     	
 	b game_loop
