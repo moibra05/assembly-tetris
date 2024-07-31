@@ -829,13 +829,12 @@ tetrominoOut:
     	jr $ra
 
 
-
+# ----- Key Press Detection + Execution & Rotation -----
 checkKeyPress:
 	lw $t9, ADDR_KBRD
 	lw $t8, 0($t9)
 	beq $t8, 1, keypressOccurred
 	jr $ra
-	
 keypressOccurred:
 	lw $t2, 4($t9)
 	addi $sp, $sp, -4
@@ -847,7 +846,6 @@ keypressOccurred:
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
 	jr $ra
-
 wPress:
 	jal rotateTetromino
     	jal refreshGameDisplay
@@ -884,9 +882,20 @@ postMove:
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
 	jr $ra
+rotateTetromino:
+	lw $s1, currentTetromino
+	lw $s2, tetrominoRotation
+	beq $s2, 3, resetRotation
+	addi $s2, $s2, 1
+	sw $s2, tetrominoRotation
+	jr $ra
+resetRotation:
+	li $s2, 0
+	sw $s2, tetrominoRotation
+	jr $ra
+# ----- ----- ----- ----- ----- -----
 
-
-
+# ----- Screen Refresh -----
 refreshGameDisplay:
 	li $s1, 0
 	li $s2, 0
@@ -895,9 +904,9 @@ refreshGameDisplay:
     	sw $s2, blockSecondaryColor
     	la $t3, blockPositions
 	j tetrominoLoop
-	
+# ----- ----- ----- -----
   
-  
+# ----- Side Collision Detection -----
 detectSideCollision:
 	li $s1, 0x1000A430
 	li $s2, 0x1000A4CC
@@ -921,27 +930,40 @@ touchingLeftWall:
 touchingRightWall:
 	li $v0, 1
 	jr $ra
+# ----- ----- ----- ----- ----- -----
 
 
-
+# ----- Bottom Collision Detection -----
 detectBottomColliison:
+	li $s0, 0
 	la $s1, blockPositions
-	lw $s2, 24($s1)
-	lw $s3, 28($s1)
-	
+touchingBottomLoop:
+	beq $s0, 4, bottomClear
+	lw $s2, 0($s1)
+	lw $s3, 4($s1)
 	add $s3, $s2, $s3
 	add $s3, $t0, $s3
 	addi $s3, $s3, 1024
-	
 	lw $s4, 0($s3)
+	lw $s5, blockPrimaryColor
+	addi $s1, $s1, 8
+	addi $s0, $s0, 1
+	beq $s4, $s5, bottomBlockCheck
 	bne $s4, 0, touchingBottom
-	lw $s4, 4($s3)
-	bne $s4, 0, touchingBottom
-	lw $s4, 8($s3)
-	bne $s4, 0, touchingBottom
-	lw $s4, 12($s3)
-	bne $s4, 0, touchingBottom
-	
+	j touchingBottomLoop
+bottomBlockCheck:
+	add $s2, $s2, $t0
+	neg $s2, $s2
+	add $s3, $s3, $s2
+	la $s5, blockPositions
+	li $s7, 0
+bottomBlockCheckLoop:
+	beq $s7, 4, touchingBottom
+	lw $s6, 4($s5)
+	beq $s3, $s6, touchingBottomLoop
+	addi $s5, $s5, 8
+	addi $s7, $s7, 1
+	j bottomBlockCheckLoop
 bottomClear:
 	li $v0, -1
 	jr $ra
@@ -957,21 +979,8 @@ touchingBottom:
 	sw $s3, tetrominoInPlay
 	li $v0, 2
 	jr $ra
+# ----- ----- ----- ----- ----- -----
 	
-	
-	
-rotateTetromino:
-	lw $s1, currentTetromino
-	lw $s2, tetrominoRotation
-	beq $s2, 3, resetRotation
-	addi $s2, $s2, 1
-	sw $s2, tetrominoRotation
-	jr $ra
-resetRotation:
-	li $s2, 0
-	sw $s2, tetrominoRotation
-	jr $ra
-
 
 	
 main:
