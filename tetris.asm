@@ -58,7 +58,7 @@ GAME_HEIGHT:
 # Mutable Data
 ##############################################################################
 blockXOffset:
-	.word	48
+	.word	112
 blockYOffset:
 	.word	9216
 blockPrimaryColor:
@@ -72,6 +72,10 @@ currentTetromino:
 tetrominoRotation:
 	.word	0
 tetrominoInPlay:
+	.word	0
+checkPossibleRotation:
+	.word	0
+rotationAttempted:
 	.word	0
 
 ##############################################################################
@@ -113,6 +117,8 @@ doneBlockLoop:
 
 	
 	
+	
+	
 drawO:
 	addi, $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -121,6 +127,7 @@ drawO:
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
+    	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
 	lw $t8, tetrominoRotation
@@ -147,7 +154,15 @@ Deg0O:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision	# Returns 1 if clear 0 if cannot rotate
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+    	j drawO
 Deg90O:
     	# Top left block
     	addi $t6, $t6, 16
@@ -165,7 +180,15 @@ Deg90O:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision	# Returns 1 if clear 0 if cannot rotate
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+    	j drawO
 Deg180O:
     	# Top left block
     	addi $t6, $t6, 16
@@ -184,7 +207,15 @@ Deg180O:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop
+    
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+    	j drawO
 Deg270O:
     	# Top left block
     	addi $t7, $t7, 1024
@@ -202,7 +233,15 @@ Deg270O:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop	
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+    	j drawO
     	
     	
 drawI:
@@ -213,6 +252,7 @@ drawI:
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
+    	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
 	lw $t8, tetrominoRotation
@@ -239,7 +279,15 @@ Deg0I:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawI
 Deg90I:
     	# Top block
     	addi $t6, $t6, -16
@@ -258,7 +306,15 @@ Deg90I:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawI
 Deg180I:
     	# Top block
     	addi $t7, $t7, 1024
@@ -276,7 +332,15 @@ Deg180I:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawI
 Deg270I:
     	# Top block
     	addi $t6, $t6, -32
@@ -295,8 +359,15 @@ Deg270I:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-    	j tetrominoLoop
-	
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawI
 	
 	
 drawS:
@@ -304,14 +375,14 @@ drawS:
 	sw $ra, 0($sp)
 	li $t1, 0xf60100
 	li $t2, 0xda0b0d
-	
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
+	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
 	lw $t8, tetrominoRotation
-    	la $t3, blockPositions
+    	la $t3, blockPositions    	
     	
     	beq $t8, 0, Deg0S
     	beq $t8, 1, Deg90S
@@ -337,7 +408,15 @@ Deg0S:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawS
 Deg90S:
     	# Bottom left block
     	sw $t6, 0($t3)
@@ -354,7 +433,15 @@ Deg90S:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawS
 Deg180S:
     	# Bottom left block
     	addi $t7, $t7, 16
@@ -373,7 +460,15 @@ Deg180S:
     	addi $t7, $t7, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawS
 Deg270S:
     	# Bottom left block
     	addi $t7, $t7, 16
@@ -391,7 +486,15 @@ Deg270S:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawS
 
 
 
@@ -400,10 +503,10 @@ drawZ:
 	sw $ra, 0($sp)
 	li $t1, 0x68b522
 	li $t2, 0x5e9b3c
-	
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
+	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
 	lw $t8, tetrominoRotation
@@ -430,7 +533,14 @@ Deg0Z:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	addi, $sp, $sp, 8
+	j drawZ
 Deg90Z:	
     	# Bottom left block
     	addi $t6, $t6, 32
@@ -448,7 +558,15 @@ Deg90Z:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawZ
 Deg180Z:	
     	# Bottom left block
     	addi $t7, $t7, 1024
@@ -466,7 +584,15 @@ Deg180Z:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawZ
 Deg270Z:	
     	# Bottom left block
     	addi $t6, $t6, 16
@@ -484,7 +610,16 @@ Deg270Z:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawZ
+
 
 
 drawL:
@@ -492,7 +627,7 @@ drawL:
 	sw $ra, 0($sp)
 	li $t1, 0xfd8c01
 	li $t2, 0xeb8f21
-	
+	lw $t5, rotationAttempted	
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
@@ -523,7 +658,15 @@ Deg0L:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawL
 Deg90L:	
     	# Bottom left block
     	addi $t7, $t7, 1024
@@ -542,7 +685,15 @@ Deg90L:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawL
 Deg180L:	
     	# Bottom left block
     	sw $t6, 0($t3)
@@ -559,7 +710,15 @@ Deg180L:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawL
 Deg270L:	
     	# Bottom left block
     	addi $t7, $t7, 32
@@ -577,7 +736,15 @@ Deg270L:
     	addi $t7, $t7, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawL
 
 
 drawJ:
@@ -585,7 +752,7 @@ drawJ:
 	sw $ra, 0($sp)
 	li $t1, 0xfd50ba
 	li $t2, 0xd465a9
-	
+	lw $t5, rotationAttempted	
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
@@ -616,7 +783,15 @@ Deg0J:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawJ
 Deg90J:
     	# Bottom left block
     	sw $t6, 0($t3)
@@ -633,7 +808,15 @@ Deg90J:
     	addi $t6, $t6, 16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawJ
 Deg180J:
     	# Bottom left block
     	addi $t6, $t6, 16
@@ -652,7 +835,15 @@ Deg180J:
     	addi $t6, $t6, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawJ
 Deg270J:
     	# Bottom left block
     	addi $t7, $t7, 1024
@@ -670,7 +861,15 @@ Deg270J:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawJ
 
 
 
@@ -679,10 +878,10 @@ drawT:
 	sw $ra, 0($sp)
 	li $t1, 0x9c0193
 	li $t2, 0x83107d
-	
     	sw $t1, blockPrimaryColor
     	sw $t2, blockSecondaryColor
     	li $t4, 0
+    	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
 	lw $t8, tetrominoRotation
@@ -711,7 +910,15 @@ Deg0T:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawT
 Deg90T:
     	# Top left block
     	addi $t7, $t7, 16
@@ -730,7 +937,15 @@ Deg90T:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawT
 Deg180T:
     	# Top left block
     	addi $t6, $t6, 16
@@ -748,7 +963,15 @@ Deg180T:
     	addi $t6, $t6, -32
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawT
 Deg270T:
     	# Top left block
     	addi $t6, $t6, 16
@@ -767,11 +990,32 @@ Deg270T:
     	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
-	j tetrominoLoop
+    	
+    	beq $t5, 0, tetrominoLoop
+    	jal checkRotationCollision
+    	beq $v0, 1, tetrominoLoop
+	jal revertRotation
+	lw $zero, rotationAttempted
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 8
+	j drawT
 	
 	
 	
-tetrominoLoop:	
+revertRotation:
+	lw $s1, tetrominoRotation
+	beq $s1, 0, revertRotationReset
+	addi $s1, $s1, -1
+	sw $s1, tetrominoRotation
+	jr $ra
+revertRotationReset:
+	li $s1, 3
+	sw $s1, tetrominoRotation
+	jr $ra
+	
+	
+tetrominoLoop:
+	sw $zero, rotationAttempted
 	bge $t4, 4, doneTetrominoLoop
 	lw $t6, 0($t3)
 	lw $t7, 4($t3)
@@ -786,8 +1030,24 @@ tetrominoLoop:
 doneTetrominoLoop:
 	lw $ra, 0($sp)
 	addi, $sp, $sp, 4
-	j tetrominoOut
-
+	jr $ra
+	
+refreshTetrominoLoop:
+	bge $t4, 4, doneRefreshTetrominoLoop
+	lw $t6, 0($t3)
+	lw $t7, 4($t3)
+	addi, $t3, $t3, 8
+	addi $sp, $sp, -4
+	sw $t6, 0($sp)
+	addi $sp, $sp, -4
+	sw $t7, 0($sp)
+	addi $t4, $t4, 1
+	jal drawblock
+	j refreshTetrominoLoop
+doneRefreshTetrominoLoop:
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 4
+	jr $ra
 
 
 drawBackground:
@@ -807,6 +1067,9 @@ backgroundSideLoop:
 	bge $t1, 0x1000F5D8, doneBackgroundLoops
 	sw $t3, 0($t1)
 	sw $t3, -4($t1)
+	sw $t3, 8($t1)
+	
+	sw $t3, -8($t2)
 	sw $t3, 0($t2)
 	sw $t3, 4($t2)
 	addi $t1, $t1, 256
@@ -829,7 +1092,7 @@ tetrominoOut:
     	jr $ra
 
 
-# ----- Key Press Detection + Execution & Rotation -----
+# ----- Key Press Detection + Execution -----
 checkKeyPress:
 	lw $t9, ADDR_KBRD
 	lw $t8, 0($t9)
@@ -847,13 +1110,21 @@ keypressOccurred:
     	addi $sp, $sp, 4
 	jr $ra
 wPress:
+	li $t1, 1
+	sw $t1, rotationAttempted
 	jal rotateTetromino
     	jal refreshGameDisplay
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
 	jr $ra
+	
+skipRevertRotation:
+    	jal refreshGameDisplay
+    	lw $ra, 0($sp)
+    	addi $sp, $sp, 4
+	jr $ra
 aPress:
-	jal detectSideCollision
+	jal detectLeftCollision
 	beq $v0, 0, postMove
 	lw $t3, blockXOffset
 	addi $t3, $t3, -16
@@ -871,7 +1142,7 @@ sPress:
     	addi $sp, $sp, 4
 	jr $ra
 dPress:
-	jal detectSideCollision
+	jal detectRightCollision
 	beq $v0, 1, postMove
 	lw $t3, blockXOffset
 	addi $t3, $t3, 16
@@ -882,6 +1153,8 @@ postMove:
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
 	jr $ra
+	
+# ----- Rotation Logic -----
 rotateTetromino:
 	lw $s1, currentTetromino
 	lw $s2, tetrominoRotation
@@ -893,8 +1166,29 @@ resetRotation:
 	li $s2, 0
 	sw $s2, tetrominoRotation
 	jr $ra
-# ----- ----- ----- ----- ----- -----
 
+checkRotationCollision:
+	# Check the next tetromino block array and ensure that the intended positions of every block is an unoccupied space
+	la $s3, blockPositions
+	li $s4, 0
+checkRotationCollisionLoop:
+	beq $s4, 4, clearRotation
+	lw $s5, 0($s3)
+	lw $s6, 4($s3)
+	add $s6, $s6, $s5
+	add $s6, $s6, $t0
+	lw $s7, 0($s6)
+	bne $s7, 0, failedRotation
+	addi $s3, $s3, 8
+	addi $s4, $s4, 1
+	j checkRotationCollisionLoop
+clearRotation:
+	li $v0, 1
+	jr $ra
+failedRotation:
+	li $v0, 0
+	jr $ra
+	
 # ----- Screen Refresh -----
 refreshGameDisplay:
 	li $s1, 0
@@ -903,25 +1197,78 @@ refreshGameDisplay:
     	sw $s1, blockPrimaryColor
     	sw $s2, blockSecondaryColor
     	la $t3, blockPositions
-	j tetrominoLoop
-# ----- ----- ----- -----
+	j refreshTetrominoLoop
   
 # ----- Side Collision Detection -----
-detectSideCollision:
-	li $s1, 0x1000A430
-	li $s2, 0x1000A4CC
-whileSideCheck:
-	# POSSIBLE BUG: CHECKS LEFT BEFORE RIGHT CAN COLLIDE ON THE BOTTOM RIGHT (TEST THIS)
-	beq $s1, 0x1000F030, wallsClear
-	# beq $t2, 0x1000F0CC, rightClear
-	lw $s3, 0($s1)
-	lw $s4, 0($s2)
-	bne $s3, 0, touchingLeftWall
+
+detectLeftCollision:
+	li $s0, 0
+	la $s1, blockPositions
+	addi $s3, $s3, -16
+touchingLeftLoop:
+	beq $s0, 4, sidesClear
+	lw $s5, blockPrimaryColor
+	lw $s2, 0($s1)
+	lw $s3, 4($s1)
+	add $s3, $s2, $s3
+	add $s3, $t0, $s3	# Store pixel location of top left of block in $s3
+	addi $s3, $s3, -16	# Store pixel location of block left of top left of block in $s3
+	lw $s4, 0($s3)
+	lw $s5, blockPrimaryColor
+	addi $s1, $s1, 8
+	addi $s0, $s0, 1
+	beq $s4, $s5, leftBlockCheck
+	bne $s4, 0, touchingLeftWall
+	j touchingLeftLoop
+leftBlockCheck:	
+	neg $s2, $t0
+	add $s3, $s3, $s2	# Gets sum of x and y coordinates and stores in $s3
+	la $s5, blockPositions
+	li $s7, 0
+leftBlockCheckLoop:
+	beq $s7, 4, touchingLeftWall
+	lw $s2, 0($s5)
+	lw $s6, 4($s5)
+	add $s6, $s6, $s2
+	beq $s3, $s6, touchingLeftLoop
+	addi $s5, $s5, 8
+	addi $s7, $s7, 1
+	j leftBlockCheckLoop
+	
+detectRightCollision:
+	li $s0, 0
+	la $s1, blockPositions
+	addi $s3, $s3, -16
+touchingRightLoop:
+	beq $s0, 4, sidesClear
+	lw $s5, blockPrimaryColor
+	lw $s2, 0($s1)
+	lw $s3, 4($s1)
+	add $s3, $s2, $s3
+	add $s3, $t0, $s3	# Store pixel location of top left of block in $s3
+	addi $s3, $s3, 16	# Store pixel location of block right of top left of block in $s3
+	lw $s4, 0($s3)
+	lw $s5, blockPrimaryColor
+	addi $s1, $s1, 8
+	addi $s0, $s0, 1
+	beq $s4, $s5, rightBlockCheck
 	bne $s4, 0, touchingRightWall
-	addi $s1, $s1, 1024
-	addi $s2, $s2, 1024
-	j whileSideCheck
-wallsClear:
+	j touchingRightLoop
+rightBlockCheck:	
+	neg $s2, $t0
+	add $s3, $s3, $s2	# Gets sum of x and y coordinates and stores in $s3
+	la $s5, blockPositions
+	li $s7, 0
+rightBlockCheckLoop:
+	beq $s7, 4, touchingRightWall
+	lw $s2, 0($s5)
+	lw $s6, 4($s5)
+	add $s6, $s6, $s2
+	beq $s3, $s6, touchingRightLoop
+	addi $s5, $s5, 8
+	addi $s7, $s7, 1
+	j rightBlockCheckLoop
+sidesClear:
 	li $v0, -1
 	jr $ra
 touchingLeftWall:
@@ -930,7 +1277,6 @@ touchingLeftWall:
 touchingRightWall:
 	li $v0, 1
 	jr $ra
-# ----- ----- ----- ----- ----- -----
 
 
 # ----- Bottom Collision Detection -----
@@ -953,13 +1299,16 @@ touchingBottomLoop:
 	j touchingBottomLoop
 bottomBlockCheck:
 	add $s2, $s2, $t0
-	neg $s2, $s2
-	add $s3, $s3, $s2
+	neg $s2, $t0
+	add $s3, $s3, $s2	# Gets sum of x and y coordinates and stores in $s3
 	la $s5, blockPositions
 	li $s7, 0
 bottomBlockCheckLoop:
+	# Loops through the coordinates of the tetromino and tries to find if the sum of any coordinates is equal to the block in question
 	beq $s7, 4, touchingBottom
+	lw $s2, 0($s5)
 	lw $s6, 4($s5)
+	add $s6, $s6, $s2
 	beq $s3, $s6, touchingBottomLoop
 	addi $s5, $s5, 8
 	addi $s7, $s7, 1
@@ -971,7 +1320,7 @@ touchingBottom:
 	li $a1, 7
     	li $v0, 42
     	syscall
-    	li $t3, 48
+    	li $t3, 112
     	li $t4, 9216
 	sw $t3, blockXOffset
 	sw $t4, blockYOffset
@@ -980,7 +1329,17 @@ touchingBottom:
 	li $v0, 2
 	jr $ra
 # ----- ----- ----- ----- ----- -----
-	
+
+gravity:
+	li $v0, 32
+	li $a0, 1000
+	syscall
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	jal sPress
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra
 
 	
 main:
@@ -990,7 +1349,7 @@ main:
    
     	lw $t0, ADDR_DSPL       # $t0 = base address for display
     	jal drawBackground
-
+	li $a0, 2
 
 game_loop:
 	# 1a. Check if key has been pressed
@@ -1004,5 +1363,5 @@ game_loop:
     	
     	jal checkKeyPress
     	jal drawTetromino
-    	
-	b game_loop
+    	jal detectBottomColliison
+    	b game_loop
