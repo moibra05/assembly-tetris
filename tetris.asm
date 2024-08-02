@@ -12,17 +12,17 @@
 #
 # Which milestones have been reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
-# - Milestone 3 (choose the one the applies)
+# - Milestone 4 (choose the one the applies)
 #
 # Which approved features have been implemented?
 # (See the assignment handout for the list of features)
 # Easy Features:
-# 1. (fill in the feature, if any)
-# 2. (fill in the feature, if any)
+# 1. 1
+# 2. 11
 # ... (add more if necessary)
 # Hard Features:
 # 1. 2
-# 2. (fill in the feature, if any)
+# 2. 4
 # ... (add more if necessary)
 # How to play:
 # (Include any instructions)
@@ -1349,6 +1349,11 @@ touchingBottom:
 	li $s3, 0
 	sw $s3, tetrominoInPlay
 	li $v1, 2
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	jal lineDetection
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
 # ----- ----- ----- ----- ----- -----
 
@@ -1364,7 +1369,7 @@ gravity:
 	lw $t2, gravityCounter
 	
 	beq $t2, 1024, gravityEffect
-	addi $t2, $t2, 128
+	addi $t2, $t2, 32
 	sw $t2, gravityCounter
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
@@ -1372,7 +1377,7 @@ gravity:
 	
 gravityEffect:
 	sw $zero, gravityCounter
-	lw $t3, blockYOffset
+	lw $t3, blockYOffset 
 	addi $t3, $t3, 1024
 	sw $t3, blockYOffset
     	jal refreshGameDisplay
@@ -1383,8 +1388,90 @@ gravityEffect:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	jr $ra
+	
+	
+	
+lineDetection: 
+	li $t1, 0x1000F030
+	li $t4, 0
+	add $t3, $t1, 160
+checkingLine:
+	beq $t1, $t3, lineFull
+	lw $t2, 0($t1)
+	beq $t2, 0, nextLine
+	addi $t4, $t4, -16
+	addi $t1, $t1, 16
+	j checkingLine
+lineFull:
+	addi $sp, $sp, -4
+	sw $t1, 0($sp)
+	j clearLine
+	j nextLine		
+nextLine:
+	add $t1, $t1, $t4
+	addi $t1, $t1, -1024
+	beq $t1, 0x1000A430, reachedTop
+	li $t4, 0
+	add $t3, $t1, 160
+	j checkingLine
+reachedTop:
+	jr $ra
+clearLine:
+	lw $s0, 0($sp)
+	addi $sp, $sp, 4
+	addi $s1, $s0, -160
+clearLineLoop:
+	beq $s0, $s1, nextLine
+	li $s2, 0xffffff
+	sw $s2, 0($s1)
+	sw $s2, 4($s1)
+	sw $s2, 8($s1)
+	sw $s2, 12($s1)
+	
+	sw $s2, 256($s1)
+	sw $s2, 260($s1)
+	sw $s2, 264($s1)
+	sw $s2, 268($s1)
+	
+	sw $s2, 512($s1)
+	sw $s2, 516($s1)
+	sw $s2, 520($s1)
+	sw $s2, 524($s1)
+	
+	sw $s2, 768($s1)
+	sw $s2, 772($s1)
+	sw $s2, 776($s1)
+	sw $s2, 780($s1)
+	
+	li $v0, 32
+	li $a0, 20
+	syscall
+	
+	sw $zero, 0($s1)
+	sw $zero, 4($s1)
+	sw $zero, 8($s1)
+	sw $zero, 12($s1)
+	
+	sw $zero, 256($s1)
+	sw $zero, 260($s1)
+	sw $zero, 264($s1)
+	sw $zero, 268($s1)
+	
+	sw $zero, 512($s1)
+	sw $zero, 516($s1)
+	sw $zero, 520($s1)
+	sw $zero, 524($s1)
+	
+	sw $zero, 768($s1)
+	sw $zero, 772($s1)
+	sw $zero, 776($s1)
+	sw $zero, 780($s1)
+	
+	addi $s1, $s1, 16
+	j clearLineLoop
 
 	
+
 main:
     	# Initialize the game
 
@@ -1406,5 +1493,4 @@ game_loop:
     	jal drawTetromino
     	jal detectBottomColliison
     	jal gravity
-
     	b game_loop
