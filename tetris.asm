@@ -95,8 +95,8 @@ drawblock:
 	lw $s1, blockPrimaryColor
 	lw $s2, blockSecondaryColor
 	
-	lw, $s7, 0($sp)
-	lw, $s6, 4($sp)
+	lw, $s7, 0($sp)	# x-offset
+	lw, $s6, 4($sp)	# y-offset
 	addi $sp, $sp 8
 	
 	add $s3, $s6, $s7
@@ -1410,12 +1410,16 @@ lineFull:
 nextLine:
 	add $t1, $t1, $t4
 	addi $t1, $t1, -1024
-	beq $t1, 0x1000A430, reachedTop
+	beq $t1, 0x1000A430, dropCurrentTetrominos
 	li $t4, 0
 	add $t3, $t1, 160
 	j checkingLine
+	
 reachedTop:
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
+	
 clearLine:
 	lw $s0, 0($sp)
 	addi $sp, $sp, 4
@@ -1471,6 +1475,68 @@ clearLineLoop:
 	j clearLineLoop
 
 	
+dropCurrentTetrominos:
+	li $t1, 0x1000F030
+	li $t9, 0	# Stores number of consecutively cleared rows
+	li $t4, 0	# Stores number of passed columns in a row
+	add $t3, $t1, 160
+	
+checkingClearRow:
+	beq $t1, $t3, rowIsClear
+	lw $t2, 0($t1)
+	bne $t2, 0, rowNotClear
+	addi $t1, $t1, 16
+	addi $t4, $t4, -16
+	j checkingClearRow
+	
+rowNotClear:
+	beq $t9, 0, checkAboveRow
+	li $t8, 1024
+	mult $t8, $t9
+	mflo $t8
+	add $t1, $t1, $t4
+	li $t4, 0
+	
+	addi $t7, $t1, -0x10008030	
+	add $t2, $t7, $t8	# Calculates y-offset of updated row and stores in $t2
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
+rowDropLoop:
+	beq $t1, $t3, checkAboveRow
+	andi $t8, $t1, 0xFF	# Gets x-offset
+	lw $t5, 0($t1)
+	lw $t6, 12($t1)
+	sw $t5, blockPrimaryColor
+	sw $t6, blockSecondaryColor
+	addi $sp, $sp, -4
+	sw $t8, 0($sp)
+	addi $sp, $sp, -4
+	sw $t2, 0($sp)
+	jal drawblock
+	
+	addi $sp, $sp, -4
+	sw $t8, 0($sp)
+	addi $sp, $sp, -4
+	sw $t7, 0($sp)
+	jal drawRefreshBlock
+	
+	addi $t4, $t4, -16
+	addi $t1, $t1, 16
+	j rowDropLoop
+	 
+
+checkAboveRow:
+	beq $t1, 0x1000A4D0, reachedTop
+	add $t1, $t1, $t4
+	addi $t1, $t1, -1024
+	li $t4, 0
+	add $t3, $t1, 160
+	j checkingClearRow
+	
+rowIsClear:
+	addi $t9, $t9, 1
+	j checkAboveRow
 
 main:
     	# Initialize the game
@@ -1479,7 +1545,11 @@ main:
    
     	lw $t0, ADDR_DSPL       # $t0 = base address for display
     	jal drawBackground
-
+	li $a1, 7
+    	li $v0, 42
+    	syscall
+    	move $a1, $a0
+    	
 game_loop:
 	# 1a. Check if key has been pressed
     	# 1b. Check which key has been pressed
@@ -1489,8 +1559,10 @@ game_loop:
 	# 4. Sleep
 
     	#5. Go back to 1
+
     	jal checkKeyPress
     	jal drawTetromino
-    	jal detectBottomColliison
     	jal gravity
+    	jal detectBottomColliison
+    	
     	b game_loop
