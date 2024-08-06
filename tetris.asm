@@ -1476,6 +1476,8 @@ clearLineLoop:
 
 	
 dropCurrentTetrominos:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
 	li $t1, 0x1000F030
 	li $t9, 0	# Stores number of consecutively cleared rows
 	li $t4, 0	# Stores number of passed columns in a row
@@ -1499,8 +1501,7 @@ rowNotClear:
 	
 	addi $t7, $t1, -0x10008030	
 	add $t2, $t7, $t8	# Calculates y-offset of updated row and stores in $t2
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
+
 	
 rowDropLoop:
 	beq $t1, $t3, checkAboveRow
