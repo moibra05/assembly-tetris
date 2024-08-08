@@ -155,15 +155,8 @@ drawO:
     	lw $t5, rotationAttempted	
 	lw $t6, blockXOffset
 	lw $t7, blockYOffset
-	lw $t8, tetrominoRotation
     	la $t3, blockPositions
     	
-    	beq $t8, 0, Deg0O
-    	beq $t8, 1, Deg90O
-    	beq $t8, 2, Deg180O
-    	beq $t8, 3, Deg270O
-    	
-Deg0O:
     	# Top left block
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
@@ -179,96 +172,9 @@ Deg0O:
     	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
+    	j tetrominoLoop
     	
-    	beq $t5, 0, tetrominoLoop
-    	jal checkRotationCollision	# Returns 1 if clear 0 if cannot rotate
-    	beq $v1, 1, tetrominoLoop
-	jal revertRotation
-	lw $zero, rotationAttempted
-	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
-    	j drawO
-Deg90O:
-    	# Top left block
-    	addi $t6, $t6, 16
-    	sw $t6, 0($t3)
-    	sw $t7, 4($t3)
-    	# Top right block
-    	addi $t6, $t6, 16
-    	sw $t6, 8($t3)
-    	sw $t7, 12($t3)
-    	# Bottom right block
-    	addi $t7, $t7, 1024
-    	sw $t6, 16($t3)
-    	sw $t7, 20($t3)
-    	# Bottom left block
-    	addi $t6, $t6, -16
-    	sw $t6, 24($t3)
-    	sw $t7, 28($t3)
-    	
-    	beq $t5, 0, tetrominoLoop
-    	jal checkRotationCollision	# Returns 1 if clear 0 if cannot rotate
-    	beq $v1, 1, tetrominoLoop
-	jal revertRotation
-	lw $zero, rotationAttempted
-	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
-    	j drawO
-Deg180O:
-    	# Top left block
-    	addi $t6, $t6, 16
-    	addi $t7, $t7, 1024
-    	sw $t6, 0($t3)
-    	sw $t7, 4($t3)
-    	# Top right block
-    	addi $t6, $t6, 16
-    	sw $t6, 8($t3)
-    	sw $t7, 12($t3)
-    	# Bottom right block
-    	addi $t7, $t7, 1024
-    	sw $t6, 16($t3)
-    	sw $t7, 20($t3)
-    	# Bottom left block
-    	addi $t6, $t6, -16
-    	sw $t6, 24($t3)
-    	sw $t7, 28($t3)
-    
-    	beq $t5, 0, tetrominoLoop
-    	jal checkRotationCollision
-    	beq $v1, 1, tetrominoLoop
-	jal revertRotation
-	lw $zero, rotationAttempted
-	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
-    	j drawO
-Deg270O:
-    	# Top left block
-    	addi $t7, $t7, 1024
-    	sw $t6, 0($t3)
-    	sw $t7, 4($t3)
-    	# Top right block
-    	addi $t6, $t6, 16
-    	sw $t6, 8($t3)
-    	sw $t7, 12($t3)
-    	# Bottom right block
-    	addi $t7, $t7, 1024
-    	sw $t6, 16($t3)
-    	sw $t7, 20($t3)
-    	# Bottom left block
-    	addi $t6, $t6, -16
-    	sw $t6, 24($t3)
-    	sw $t7, 28($t3)
-    	
-    	beq $t5, 0, tetrominoLoop
-    	jal checkRotationCollision
-    	beq $v1, 1, tetrominoLoop
-	jal revertRotation
-	lw $zero, rotationAttempted
-	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
-    	j drawO
-    	
-    	
+  	
 drawI:
 	addi, $sp, $sp, -4
 	sw $ra, 0($sp)
