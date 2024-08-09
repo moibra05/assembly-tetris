@@ -53,6 +53,7 @@ GAME_WIDTH:
 	.word 320
 GAME_HEIGHT:
 	.word 640
+newline: .asciiz "\n"
 
 ##############################################################################
 # Mutable Data
@@ -61,11 +62,15 @@ blockXOffset:
 	.word	112
 blockYOffset:
 	.word	9216
+blockOutlineYOffset:
+	.word	4112
 blockPrimaryColor:
 	.word	0xff0000
 blockSecondaryColor:
 	.word	0xff0000
 blockPositions:
+	.space	32
+blockOutlinePositions:
 	.space	32
 currentTetromino:
 	.word	1	# 0 - O, 1 - I, 2 - S, 3 - Z, 4 - L, 5 - J, 6 - T
@@ -94,13 +99,19 @@ gravityCounter:
 drawblock:
 	lw $s1, blockPrimaryColor
 	lw $s2, blockSecondaryColor
-	
 	lw, $s7, 0($sp)	# x-offset
 	lw, $s6, 4($sp)	# y-offset
 	addi $sp, $sp 8
-	
 	add $s3, $s6, $s7
 	add $s4, $t0, $s3
+	beq $a3, 1, drawingOutlign
+	j skipDrawingOutlign
+drawingOutlign:
+	lw $s6, blockOutlineYOffset
+	li $s1, 0xffffff
+	li $s2, 0xffffff
+	add $s4, $s4, $s6
+skipDrawingOutlign:
 	addi $s5, $s4, 512
 blockLoop:	
 	bgt $s4, $s5, doneBlockLoop
@@ -138,10 +149,29 @@ doneRefreshBlockLoop:
 	sw $zero, 4($s4)
 	sw $zero, 8($s4)
 	sw $zero, 12($s4)
+	
+	lw $s6, blockOutlineYOffset
+	add $s4, $s4, $s6
+	addi $s4, $s4, -768
+	addi $s5, $s4, 512
+	
+refreshOutlineBlockLoop:	
+	bgt $s4, $s5, doneRefreshOutlineBlockLoop
+	sw $zero, 0($s4)
+	sw $zero, 4($s4)
+	sw $zero, 8($s4)
+	sw $zero, 12($s4)
+	addi $s4, $s4, 256
+	j refreshOutlineBlockLoop
+doneRefreshOutlineBlockLoop:	
+	sw $zero, 0($s4)
+	sw $zero, 4($s4)
+	sw $zero, 8($s4)
+	sw $zero, 12($s4)
+	
 	jr $ra
 
-	
-	
+
 	
 	
 drawO:
@@ -1008,10 +1038,9 @@ backgroundSideLoop:
 	j backgroundSideLoop
 doneBackgroundLoops:
 	jr $ra 
-
-
-
+	
 drawTetromino:
+	li $a3, 0
     	beq $a1, 0, drawO
     	beq $a1, 1, drawI
     	beq $a1, 2, drawS
@@ -1019,8 +1048,89 @@ drawTetromino:
     	beq $a1, 4, drawL
     	beq $a1, 5, drawJ
     	beq $a1, 6, drawT
-tetrominoOut:
-    	jr $ra
+
+
+
+
+
+
+
+
+
+
+drawBottomPosition:
+	li $s0, 0
+	la $s1, blockPositions
+	li $s6, 20
+	beq $a1, 0, drawOLowest
+	beq $a1, 1, drawILowest
+	j drawOthersLowest
+drawOLowest:
+	blt $s5, $s6, newClosest
+	j skipNewClosest
+newClosest:
+	move $s6, $s5
+skipNewClosest:
+	move $a0, $s6
+	li $v0, 1
+	syscall
+	la $a0, newline
+	li $v0, 4
+	syscall
+	beq $s0, 2, drawOOutline
+	li $s5, 0	# stores number of blocks below
+	lw $s2, 16($s1)	# stores x-coord of bottom left block
+	lw $s3, 20($s1) # stores y-coord of bottom left block
+	add $s2, $s3, $s2
+	add $s2, $s2, $t0
+	addi $s2, $s2, 1024 # stores the position of the bottom left block of the square outline
+	addi $s0, $s0, 1
+	addi $s1, $s1, 8
+OLowestLoop:
+	lw $s4, 0($s2)
+	beq $s4, 0xffffff, ignoreWhite
+	bne $s4, 0, drawOLowest 
+ignoreWhite:
+	addi $s2, $s2, 1024
+	addi $s5, $s5, 1
+	j OLowestLoop
+drawOOutline:
+	li $a3, 1
+	li $s7, 1024 
+	mult $s7, $s6
+	mflo $s6
+	sw $s6, blockOutlineYOffset
+	la $t3, blockPositions
+	li $t4, 0
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	beq $s6, 0, skipOutline
+	j tetrominoLoop
+skipOutline:
+	li $a3, 0
+	jr $ra
+
+
+
+
+drawILowest:
+	jr $ra
+	lw $t6, tetrominoRotation
+	beq $t6, 0, drawVerticalILowest
+	beq $t6, 2, drawVerticalILowest
+drawVerticalILowest:
+	lw $t2, 24($t1)
+	lw $t3, 28($t1)
+	add $t4, $t3, $t2
+	add $t4, $t4, $t0
+	lw $t6, 0($t4)
+drawOthersLowest:
+	jr $ra
+
+
+
+
+
 
 
 # ----- Key Press Detection + Execution -----
@@ -1122,6 +1232,8 @@ failedRotation:
 	
 # ----- Screen Refresh -----
 refreshGameDisplay:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
 	li $t4, 0
     	la $t3, blockPositions
 	j refreshTetrominoLoop
@@ -1210,6 +1322,8 @@ touchingRightWall:
 detectBottomColliison:
 	li $s0, 0
 	la $s1, blockPositions
+	j touchingBottomLoop
+
 touchingBottomLoop:
 	beq $s0, 4, bottomClear
 	lw $s2, 0($s1)
@@ -1222,6 +1336,7 @@ touchingBottomLoop:
 	addi $s1, $s1, 8
 	addi $s0, $s0, 1
 	beq $s4, $s5, bottomBlockCheck
+	beq $s4, 0xffffff, touchingBottomLoop
 	bne $s4, 0, touchingBottom
 	j touchingBottomLoop
 bottomBlockCheck:
@@ -1456,6 +1571,7 @@ main:
     	li $v0, 42
     	syscall
     	move $a1, $a0
+    	li $a1, 0
     	
 game_loop:
 	# 1a. Check if key has been pressed
@@ -1469,7 +1585,9 @@ game_loop:
 
     	jal checkKeyPress
     	jal drawTetromino
+    	jal drawBottomPosition
+    	li $a3, 0
     	jal gravity
     	jal detectBottomColliison
-    	
+   
     	b game_loop
