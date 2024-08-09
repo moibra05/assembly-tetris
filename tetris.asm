@@ -19,6 +19,7 @@
 # Easy Features:
 # 1. 1
 # 2. 11
+# 3. 8
 # ... (add more if necessary)
 # Hard Features:
 # 1. 2
@@ -111,6 +112,8 @@ drawingOutlign:
 	li $s1, 0xffffff
 	li $s2, 0xffffff
 	add $s4, $s4, $s6
+	lw $s6, 0($s4)
+	bne $s6, 0, dontDraw
 skipDrawingOutlign:
 	addi $s5, $s4, 512
 blockLoop:	
@@ -126,6 +129,7 @@ doneBlockLoop:
 	sw $s2, 4($s4)
 	sw $s2, 8($s4)
 	sw $s2, 12($s4)
+dontDraw:
 	jr $ra
 
 drawRefreshBlock:
@@ -188,6 +192,7 @@ drawO:
     	la $t3, blockPositions
     	
     	# Top left block
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top right block
@@ -195,7 +200,7 @@ drawO:
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Bottom right block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Bottom left block
@@ -226,18 +231,20 @@ drawI:
     	
 Deg0I:
     	# Top block
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, 3072
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top second block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top third block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Bottom block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -251,8 +258,7 @@ Deg0I:
 	j drawI
 Deg90I:
     	# Top block
-    	addi $t6, $t6, -16
-    	addi $t7, $t7, 2048
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top second block
@@ -278,19 +284,20 @@ Deg90I:
 	j drawI
 Deg180I:
     	# Top block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 32
+    	addi $t7, $t7, 3072
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top second block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top third block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Bottom block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -304,7 +311,6 @@ Deg180I:
 	j drawI
 Deg270I:
     	# Top block
-    	addi $t6, $t6, -32
     	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
@@ -352,8 +358,7 @@ drawS:
     	
 Deg0S:
     	# Bottom left block
-    	addi $t6, $t6, 16
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
@@ -361,12 +366,12 @@ Deg0S:
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t6, $t6, -32
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -380,18 +385,21 @@ Deg0S:
 	j drawS
 Deg90S:
     	# Bottom left block
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
+    	addi $t6, $t6, 16
     	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -405,20 +413,20 @@ Deg90S:
 	j drawS
 Deg180S:
     	# Bottom left block
-    	addi $t7, $t7, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 16
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, -32
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 16
+    	addi $t6, $t6, -16
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -432,19 +440,22 @@ Deg180S:
 	j drawS
 Deg270S:
     	# Bottom left block
-    	addi $t7, $t7, 16
+    	addi $t6, $t6, 16
+      	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
+    	addi $t6, $t6, 16
     	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -480,18 +491,21 @@ drawZ:
     	
 Deg0Z:	
     	# Bottom left block
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -504,19 +518,21 @@ Deg0Z:
 	j drawZ
 Deg90Z:	
     	# Bottom left block
-    	addi $t6, $t6, 32
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, -16
+    	addi $t6, $t6, -16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -530,19 +546,20 @@ Deg90Z:
 	j drawZ
 Deg180Z:	
     	# Bottom left block
-    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -557,18 +574,21 @@ Deg180Z:
 Deg270Z:	
     	# Bottom left block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t6, $t6, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, -16
+    	addi $t6, $t6, -16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -604,19 +624,20 @@ drawL:
     
 Deg0L:	
     	# Bottom left block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -32
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -630,20 +651,19 @@ Deg0L:
 	j drawL
 Deg90L:	
     	# Bottom left block
-    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, 2048
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, -32
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -657,18 +677,19 @@ Deg90L:
 	j drawL
 Deg180L:	
     	# Bottom left block
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 16
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -682,19 +703,21 @@ Deg180L:
 	j drawL
 Deg270L:	
     	# Bottom left block
-    	addi $t7, $t7, 32
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, -16
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -729,19 +752,20 @@ drawJ:
     	
 Deg0J:
     	# Bottom left block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
+    	addi $t6, $t6, 16
     	addi $t7, $t7, 1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -755,18 +779,19 @@ Deg0J:
 	j drawJ
 Deg90J:
     	# Bottom left block
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -780,20 +805,20 @@ Deg90J:
 	j drawJ
 Deg180J:
     	# Bottom left block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
-    	addi $t7, $t7, 16
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
-    	addi $t7, $t7, -16
+    	addi $t6, $t6, 16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, 1024
+    	addi $t6, $t6, -32
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -807,15 +832,17 @@ Deg180J:
 	j drawJ
 Deg270J:
     	# Bottom left block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Bottom center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, -2048
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Top center block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
@@ -860,15 +887,16 @@ Deg0T:
     	sw $t7, 4($t3)
     	# Top center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Bottom center block
     	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
     	addi $t6, $t6, -16
-    	addi $t7, $t7, 1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -882,20 +910,20 @@ Deg0T:
 	j drawT
 Deg90T:
     	# Top left block
-    	addi $t7, $t7, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top center block
+    	addi $t6, $t6, 16
     	addi $t7, $t7, 1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Bottom center block
-    	addi $t7, $t7, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t7, $t7, 16
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -909,11 +937,11 @@ Deg90T:
 	j drawT
 Deg180T:
     	# Top left block
-    	addi $t6, $t6, 16
+    	addi $t7, $t7, 1024
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top center block
-    	addi $t7, $t7, 1024
+    	addi $t6, $t6, 16
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Bottom center block
@@ -921,7 +949,8 @@ Deg180T:
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, -32
+    	addi $t6, $t6, -16
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -936,19 +965,20 @@ Deg180T:
 Deg270T:
     	# Top left block
     	addi $t6, $t6, 16
+    	addi $t6, $t6, 2048
     	sw $t6, 0($t3)
     	sw $t7, 4($t3)
     	# Top center block
-    	addi $t6, $t6, 1024
+    	addi $t6, $t6, 16
+    	addi $t7, $t7, -1024
     	sw $t6, 8($t3)
     	sw $t7, 12($t3)
     	# Bottom center block
-    	addi $t6, $t6, 16
+    	addi $t6, $t6, -16
     	sw $t6, 16($t3)
     	sw $t7, 20($t3)
     	# Top right block
-    	addi $t6, $t6, -16
-    	addi $t7, $t7, 1024
+    	addi $t7, $t7, -1024
     	sw $t6, 24($t3)
     	sw $t7, 28($t3)
     	
@@ -1053,7 +1083,9 @@ drawTetromino:
 
 
 
-
+	
+	
+	
 
 
 
@@ -1062,10 +1094,41 @@ drawBottomPosition:
 	li $s0, 0
 	la $s1, blockPositions
 	li $s6, 20
-	beq $a1, 0, drawOLowest
-	beq $a1, 1, drawILowest
-	j drawOthersLowest
-drawOLowest:
+	beq $a1, 0, drawOLowestInit
+	beq $a1, 1, drawILowestInit
+	j drawOthersLowestInit
+
+drawOLowestInit:
+	li $s7, 2
+	j drawLowest
+	
+drawILowestInit:
+	lw $t6, tetrominoRotation
+	beq $t6, 0, drawVerticalILowestInit
+	beq $t6, 2, drawVerticalILowestInit
+	beq $t6, 1, drawHorizontalILowestInit
+	beq $t6, 3, drawHorizontalILowestInit
+	
+drawVerticalILowestInit:
+	li $s7, 1
+	j drawLowest
+	
+drawHorizontalILowestInit:
+	li $s7, 4
+	j drawLowest
+
+drawOthersLowestInit:
+	lw $t6, tetrominoRotation
+	beq $t6, 0, draw3LowestInit
+	beq $t6, 2, draw3LowestInit
+	beq $t6, 1, drawOLowestInit
+	beq $t6, 3, drawOLowestInit
+draw3LowestInit:
+	li $s7, 3
+	j drawLowest
+
+
+drawLowest:
 	blt $s5, $s6, newClosest
 	j skipNewClosest
 newClosest:
@@ -1077,24 +1140,24 @@ skipNewClosest:
 	la $a0, newline
 	li $v0, 4
 	syscall
-	beq $s0, 2, drawOOutline
+	beq $s0, $s7, drawOutline
 	li $s5, 0	# stores number of blocks below
-	lw $s2, 16($s1)	# stores x-coord of bottom left block
-	lw $s3, 20($s1) # stores y-coord of bottom left block
+	lw $s2, 0($s1)	# stores x-coord of bottom left block
+	lw $s3, 4($s1) # stores y-coord of bottom left block
 	add $s2, $s3, $s2
 	add $s2, $s2, $t0
 	addi $s2, $s2, 1024 # stores the position of the bottom left block of the square outline
 	addi $s0, $s0, 1
 	addi $s1, $s1, 8
-OLowestLoop:
+lowestLoop:
 	lw $s4, 0($s2)
 	beq $s4, 0xffffff, ignoreWhite
-	bne $s4, 0, drawOLowest 
+	bne $s4, 0, drawLowest 
 ignoreWhite:
 	addi $s2, $s2, 1024
 	addi $s5, $s5, 1
-	j OLowestLoop
-drawOOutline:
+	j lowestLoop
+drawOutline:
 	li $a3, 1
 	li $s7, 1024 
 	mult $s7, $s6
@@ -1109,24 +1172,8 @@ drawOOutline:
 skipOutline:
 	li $a3, 0
 	jr $ra
-
-
-
-
-drawILowest:
-	jr $ra
-	lw $t6, tetrominoRotation
-	beq $t6, 0, drawVerticalILowest
-	beq $t6, 2, drawVerticalILowest
-drawVerticalILowest:
-	lw $t2, 24($t1)
-	lw $t3, 28($t1)
-	add $t4, $t3, $t2
-	add $t4, $t4, $t0
-	lw $t6, 0($t4)
-drawOthersLowest:
-	jr $ra
-
+	
+	
 
 
 
@@ -1398,6 +1445,8 @@ gravity:
 	
 gravityEffect:
 	sw $zero, gravityCounter
+	jal detectBottomColliison
+	beq $v1, 2, postMove
 	lw $t3, blockYOffset 
 	addi $t3, $t3, 1024
 	sw $t3, blockYOffset
@@ -1582,7 +1631,7 @@ game_loop:
 	# 4. Sleep
 
     	#5. Go back to 1
-
+	
     	jal checkKeyPress
     	jal drawTetromino
     	jal drawBottomPosition
