@@ -12,7 +12,7 @@
 #
 # Which milestones have been reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
-# - Milestone 4 (choose the one the applies)
+# - Milestone 1-5 (choose the one the applies)
 #
 # Which approved features have been implemented?
 # (See the assignment handout for the list of features)
@@ -20,21 +20,26 @@
 # 1. 1
 # 2. 11
 # 3. 8
+# 4. 2
 # ... (add more if necessary)
 # Hard Features:
 # 1. 2
 # 2. 4
 # ... (add more if necessary)
 # How to play:
+#	A/D Move left and right respectively
+#	W Rotates
+#	S Moves block down
+#	Space drops block to bottom
 # (Include any instructions)
 # Link to video demonstration for final submission:
 # - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
 #
 # Are you OK with us sharing the video with people outside course staff?
-# - yes / no
+# - yes
 #
 # Any additional information that the TA needs to know:
-# - (write here, if any)
+# - The game is meant to quit after the blocks reach the top
 #
 #####################################################################
 
@@ -50,10 +55,6 @@ ADDR_DSPL:
 # The address of the keyboard. Don't forget to connect it!
 ADDR_KBRD:
 	.word 0xffff0000
-GAME_WIDTH:
-	.word 320
-GAME_HEIGHT:
-	.word 640
 newline: .asciiz "\n"
 
 ##############################################################################
@@ -71,27 +72,18 @@ blockSecondaryColor:
 	.word	0xff0000
 blockPositions:
 	.space	32
-blockOutlinePositions:
-	.space	32
-currentTetromino:
-	.word	1	# 0 - O, 1 - I, 2 - S, 3 - Z, 4 - L, 5 - J, 6 - T
 tetrominoRotation:
-	.word	0
-tetrominoInPlay:
-	.word	0
-checkPossibleRotation:
 	.word	0
 rotationAttempted:
 	.word	0
 gravityCounter:
 	.word	0
+linesCompleted:
+	.word	0
 
 ##############################################################################
 # Code
 ##############################################################################
-.eqv	RED	0xff0000
-.eqv	GREEN	0x00ff00
-.eqv	BLUE	0x0000ff
 
 	.text
 	.globl main
@@ -1069,6 +1061,8 @@ backgroundSideLoop:
 doneBackgroundLoops:
 	jr $ra 
 	
+	
+	
 drawTetromino:
 	li $a3, 0
     	beq $a1, 0, drawO
@@ -1078,16 +1072,6 @@ drawTetromino:
     	beq $a1, 4, drawL
     	beq $a1, 5, drawJ
     	beq $a1, 6, drawT
-
-
-
-
-
-	
-	
-	
-
-
 
 
 drawBottomPosition:
@@ -1134,12 +1118,6 @@ drawLowest:
 newClosest:
 	move $s6, $s5
 skipNewClosest:
-	move $a0, $s6
-	li $v0, 1
-	syscall
-	la $a0, newline
-	li $v0, 4
-	syscall
 	beq $s0, $s7, drawOutline
 	li $s5, 0	# stores number of blocks below
 	lw $s2, 0($s1)	# stores x-coord of bottom left block
@@ -1194,6 +1172,7 @@ keypressOccurred:
 	beq $t2, 0x61, aPress
 	beq $t2, 0x73, sPress
 	beq $t2, 0x64, dPress
+	beq $t2, 0x20, spacePress
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
 	jr $ra
@@ -1237,6 +1216,13 @@ dPress:
 	sw $t3, blockXOffset
     	jal refreshGameDisplay
     	j postMove
+spacePress:
+	lw $t3, blockOutlineYOffset
+	lw $t4, blockYOffset
+	add $t4, $t4, $t3
+	sw $t4, blockYOffset
+    	jal refreshGameDisplay
+	j postMove
 postMove:
     	lw $ra, 0($sp)
     	addi $sp, $sp, 4
@@ -1244,7 +1230,6 @@ postMove:
 	
 # ----- Rotation Logic -----
 rotateTetromino:
-	lw $s1, currentTetromino
 	lw $s2, tetrominoRotation
 	beq $s2, 3, resetRotation
 	addi $s2, $s2, 1
@@ -1415,7 +1400,6 @@ touchingBottom:
 	sw $t3, blockXOffset
 	sw $t4, blockYOffset
 	li $s3, 0
-	sw $s3, tetrominoInPlay
 	li $v1, 2
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -1436,7 +1420,18 @@ gravity:
 	beq $v1, 2, postMove
 	lw $t2, gravityCounter
 	
-	beq $t2, 1024, gravityEffect
+	bge $t2, 1024, gravityEffect
+	lw $t4, linesCompleted
+	li $t5, 4
+	mult $t4, $t5
+	mflo $t4
+	li $v0, 1
+	move $a0, $t4
+	syscall
+	la $a0, newline
+	li $v0, 4
+	syscall
+	add $t2, $t2, $t4
 	addi $t2, $t2, 32
 	sw $t2, gravityCounter
 	lw $ra, 0($sp)
@@ -1475,6 +1470,9 @@ checkingLine:
 lineFull:
 	addi $sp, $sp, -4
 	sw $t1, 0($sp)
+	lw $t5, linesCompleted
+	addi $t5, $t5, 1
+	sw $t5, linesCompleted
 	j clearLine
 	j nextLine		
 nextLine:
@@ -1595,7 +1593,6 @@ rowDropLoop:
 	addi $t4, $t4, -16
 	addi $t1, $t1, 16
 	j rowDropLoop
-	 
 
 checkAboveRow:
 	beq $t1, 0x1000A4D0, reachedTop
@@ -1620,7 +1617,6 @@ main:
     	li $v0, 42
     	syscall
     	move $a1, $a0
-    	li $a1, 0
     	
 game_loop:
 	# 1a. Check if key has been pressed
