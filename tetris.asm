@@ -12,7 +12,7 @@
 #
 # Which milestones have been reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
-# - Milestone 1-5 (choose the one the applies)
+# - Milestone 5 (choose the one the applies)
 #
 # Which approved features have been implemented?
 # (See the assignment handout for the list of features)
@@ -33,7 +33,7 @@
 #	Space drops block to bottom
 # (Include any instructions)
 # Link to video demonstration for final submission:
-# - (insert YouTube / MyMedia / other URL here). Make sure we can view it!
+# - https://drive.google.com/file/d/1j9cBtMXiM_knzpv9sCD_pn8I7eqPQxtq/view?usp=sharing
 #
 # Are you OK with us sharing the video with people outside course staff?
 # - yes
@@ -1425,12 +1425,6 @@ gravity:
 	li $t5, 4
 	mult $t4, $t5
 	mflo $t4
-	li $v0, 1
-	move $a0, $t4
-	syscall
-	la $a0, newline
-	li $v0, 4
-	syscall
 	add $t2, $t2, $t4
 	addi $t2, $t2, 32
 	sw $t2, gravityCounter
